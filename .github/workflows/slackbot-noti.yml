@@ -1,0 +1,42 @@
+name: Daily Contest Notification
+
+on:
+  schedule:
+    # 매일 오전 10:30 (UTC+9 기준)에 실행
+    - cron: '30 1 * * *'
+  workflow_dispatch:  # 수동 실행 옵션 추가
+
+jobs:
+  check-contests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Set up Kaggle credentials
+      run: |
+        mkdir -p ~/.kaggle
+        echo '${{ secrets.KAGGLE_JSON }}' > ~/.kaggle/kaggle.json
+        chmod 600 ~/.kaggle/kaggle.json
+        
+    - name: Create env file
+      run: |
+        echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" > .env
+        echo "SLACK_CHANNEL=${{ secrets.SLACK_CHANNEL }}" >> .env
+        
+    - name: Run contest notification bot
+      run: |
+        python bot/contest_noti_slackbot.py
+      env:
+        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}

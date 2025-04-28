@@ -432,27 +432,30 @@ def clean_competition_data():
 def main():
     """프로그램의 메인 실행 함수.
     
-    1. 스케줄러를 설정하여 2분 간격으로 실행 (주말 제외)
-    2. 프로그램 시작 시 한 번 실행
-    3. 무한 루프로 스케줄러 실행
+    GitHub Actions 환경에서는 한 번만 실행하고,
+    로컬 환경에서는 스케줄러로 실행
     """
     logger.info("Competition notification bot started")
     
     # 기존 데이터 정리
     clean_competition_data()
     
-    # 스케줄러 설정 (2분 간격으로 실행, 주말 제외)
-    schedule.every(2).minutes.do(check_new_competitions)
-    
-    logger.info("Scheduler set to run every 2 minutes on weekdays")
-    
-    # 스케줄러 실행
-    while True:
-        # 주말이 아닐 때만 스케줄러 실행
-        if datetime.now().weekday() < 5:  # 0-4는 월요일부터 금요일
-            schedule.run_pending()
-        time.sleep(60)  # 1분마다 체크
-
+    # GitHub Actions 환경인지 확인
+    if os.getenv('GITHUB_ACTIONS'):
+        # GitHub Actions에서는 한 번만 실행
+        check_new_competitions()
+    else:
+        # 로컬 환경에서는 스케줄러로 실행 (2분 간격, 주말 제외)
+        schedule.every(2).minutes.do(check_new_competitions)
+        
+        logger.info("Scheduler set to run every 2 minutes on weekdays")
+        
+        # 스케줄러 실행
+        while True:
+            # 주말이 아닐 때만 스케줄러 실행
+            if datetime.now().weekday() < 5:  # 0-4는 월요일부터 금요일
+                schedule.run_pending()
+            time.sleep(60)  # 1분마다 체크
 
 
 if __name__ == "__main__":
