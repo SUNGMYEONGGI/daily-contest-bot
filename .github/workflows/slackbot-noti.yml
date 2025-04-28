@@ -2,8 +2,8 @@ name: Daily Contest Notification
 
 on:
   schedule:
-    # 매일 오전 10:30 (UTC+9 기준)에 실행
-    - cron: '30 1 * * *'
+    # 매일 오후 5시 15분 (UTC+9 기준 17:15) = UTC 08:15에 실행
+    - cron: '15 8 * * *'
   workflow_dispatch:  # 수동 실행 옵션 추가
 
 jobs:
@@ -35,8 +35,36 @@ jobs:
         echo "SLACK_CHANNEL=${{ secrets.SLACK_CHANNEL }}" >> .env
         
     - name: Run contest notification bot
+      id: check_contests
       run: |
+        # 실행 전 competition_data.json 백업
+        if [ -f competition_data.json ]; then
+          cp competition_data.json competition_data.json.bak
+        fi
+        
+        # 봇 실행
         python bot/contest_noti_slackbot.py
+        
+        # 파일 변경 여부 확인
+        if [ -f competition_data.json.bak ]; then
+          if ! cmp -s competition_data.json competition_data.json.bak; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+          rm competition_data.json.bak
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
       env:
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+
+    - name: Commit and push if there are changes
+      if: steps.check_contests.outputs.has_changes == 'true'
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add competition_data.json
+        git commit -m "Update competition data [$(date +'%Y-%m-%d %H:%M:%S')]"
+        git push
