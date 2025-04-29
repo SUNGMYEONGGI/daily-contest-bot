@@ -23,12 +23,20 @@ from slack_sdk.errors import SlackApiError
 from kaggle.api.kaggle_api_extended import KaggleApi
 
 
+# 상수 정의
+SLACK_TOKEN = os.getenv("SLACK_TOKEN")
+SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#contest-notify-bot")
+DATA_DIR = os.path.join("data", "main")  # 메인 데이터 디렉토리
+DATA_FILE = os.path.join(DATA_DIR, "competition_data.json")
+LOG_FILE = os.path.join(DATA_DIR, "competition_bot.log")
+
 # 로깅 설정
+os.makedirs(DATA_DIR, exist_ok=True)  # 데이터 디렉토리 생성
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("competition_bot.log"),
+        logging.FileHandler(LOG_FILE),
         logging.StreamHandler()
     ]
 )
@@ -36,11 +44,6 @@ logger = logging.getLogger(__name__)
 
 # 환경 변수 로드
 load_dotenv()
-
-# 상수 정의
-SLACK_TOKEN = os.getenv("SLACK_TOKEN")
-SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#contest-notify-bot")
-DATA_FILE = "competition_data.json"
 
 # Slack 클라이언트 초기화
 slack_client = WebClient(token=SLACK_TOKEN)
@@ -433,7 +436,7 @@ def main():
     """프로그램의 메인 실행 함수.
     
     GitHub Actions 환경에서는 한 번만 실행하고,
-    로컬 환경에서는 스케줄러로 실행
+    로컬 환경에서는 매일 오전 10:30 KST(=01:30 UTC)에 실행 (주말 제외)
     """
     logger.info("Competition notification bot started")
     
@@ -445,11 +448,9 @@ def main():
         # GitHub Actions에서는 한 번만 실행
         check_new_competitions()
     else:
-        # 로컬 환경에서는 스케줄러로 실행 (2분 간격, 주말 제외)
-        schedule.every(2).minutes.do(check_new_competitions)
-        
-        logger.info("Scheduler set to run every 2 minutes on weekdays")
-        
+        # 로컬 환경에서는 매일 오전 10:30 KST(=01:30 UTC)에 실행 (주말 제외)
+        schedule.every().day.at("01:30").do(check_new_competitions)  # 10:30 KST
+        logger.info("Scheduler set to run at 10:30 KST (01:30 UTC) on weekdays")
         # 스케줄러 실행
         while True:
             # 주말이 아닐 때만 스케줄러 실행

@@ -2,9 +2,14 @@ name: Daily Contest Notification
 
 on:
   schedule:
-    # 매일 오후 5시 15분 (UTC+9 기준 17:15) = UTC 08:15에 실행
-    - cron: '15 8 * * *'
+    # 매일 오전 10시 30분 (UTC+9 기준 10:30) = UTC 01:30에 실행
+    - cron: '30 1 * * *'
   workflow_dispatch:  # 수동 실행 옵션 추가
+
+# 워크플로우에 필요한 권한 설정
+permissions:
+  contents: write  # 저장소 내용 수정 권한
+  issues: write    # 이슈 생성 권한
 
 jobs:
   check-contests:
@@ -12,6 +17,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 전체 히스토리 가져오기
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -43,7 +50,7 @@ jobs:
         fi
         
         # 봇 실행
-        python bot/contest_noti_slackbot.py
+        python bot/main.py
         
         # 파일 변경 여부 확인
         if [ -f competition_data.json.bak ]; then
@@ -68,3 +75,15 @@ jobs:
         git add competition_data.json
         git commit -m "Update competition data [$(date +'%Y-%m-%d %H:%M:%S')]"
         git push
+      
+    - name: Create issue if workflow fails
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Workflow 실행 실패 알림',
+            body: `워크플로우 실행 중 오류가 발생했습니다.\n실행 시간: ${new Date().toISOString()}\n실행 ID: ${context.runId}\n\n자세한 내용은 Actions 탭에서 확인해주세요.`
+          });
