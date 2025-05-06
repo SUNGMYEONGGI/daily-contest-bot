@@ -6,7 +6,8 @@
     "url": "https://www.kaggle.com/competitions/arc-prize-2025",
     "deadline": "2025-11-03 23:59:00 UTC",
     "category": "Featured",
-    "reward": "$725,000 Usd"
+    "reward": "$725,000 Usd",
+    "image_url": "https://kaggle.com/competitions/91496/images/header"
   },
   {
     "platform": "Kaggle",
@@ -15,7 +16,8 @@
     "url": "https://www.kaggle.com/competitions/stanford-rna-3d-folding",
     "deadline": "2025-05-29 23:59:00 UTC",
     "category": "Featured",
-    "reward": "$75,000 Usd"
+    "reward": "$75,000 Usd",
+    "image_url": "https://kaggle.com/competitions/87793/images/header"
   },
   {
     "platform": "Kaggle",
@@ -24,7 +26,8 @@
     "url": "https://www.kaggle.com/competitions/byu-locating-bacterial-flagellar-motors-2025",
     "deadline": "2025-06-04 23:59:00 UTC",
     "category": "Research",
-    "reward": "$65,000 Usd"
+    "reward": "$65,000 Usd",
+    "image_url": "https://kaggle.com/competitions/91249/images/header"
   },
   {
     "platform": "Kaggle",
@@ -33,7 +36,8 @@
     "url": "https://www.kaggle.com/competitions/birdclef-2025",
     "deadline": "2025-06-05 23:59:00 UTC",
     "category": "Research",
-    "reward": "$50,000 Usd"
+    "reward": "$50,000 Usd",
+    "image_url": "https://kaggle.com/competitions/91844/images/header"
   },
   {
     "platform": "Kaggle",
@@ -42,7 +46,8 @@
     "url": "https://www.kaggle.com/competitions/drawing-with-llms",
     "deadline": "2025-05-27 23:59:00 UTC",
     "category": "Featured",
-    "reward": "$50,000 Usd"
+    "reward": "$50,000 Usd",
+    "image_url": "https://kaggle.com/competitions/89659/images/header"
   },
   {
     "platform": "Kaggle",
@@ -51,7 +56,8 @@
     "url": "https://www.kaggle.com/competitions/image-matching-challenge-2025",
     "deadline": "2025-06-02 23:59:00 UTC",
     "category": "Research",
-    "reward": "$50,000 Usd"
+    "reward": "$50,000 Usd",
+    "image_url": "https://kaggle.com/competitions/91498/images/header"
   },
   {
     "platform": "Kaggle",
@@ -60,16 +66,18 @@
     "url": "https://www.kaggle.com/competitions/waveform-inversion",
     "deadline": "2025-06-30 23:59:00 UTC",
     "category": "Research",
-    "reward": "$50,000 Usd"
+    "reward": "$50,000 Usd",
+    "image_url": "https://kaggle.com/competitions/39763/images/header"
   },
   {
     "platform": "Kaggle",
-    "name": "Predict Podcast Listening Time",
-    "description": "Playground Series - Season 5, Episode 4",
-    "url": "https://www.kaggle.com/competitions/playground-series-s5e4",
-    "deadline": "2025-04-30 23:59:00 UTC",
+    "name": "Predict Calorie Expenditure",
+    "description": "Playground Series - Season 5, Episode 5",
+    "url": "https://www.kaggle.com/competitions/playground-series-s5e5",
+    "deadline": "2025-05-31 23:59:00 UTC",
     "category": "Playground",
-    "reward": "$Swag"
+    "reward": "$Swag",
+    "image_url": "https://kaggle.com/competitions/91716/images/header"
   },
   {
     "platform": "Kaggle",
@@ -78,7 +86,8 @@
     "url": "https://www.kaggle.com/competitions/titanic",
     "deadline": "2030-01-01 00:00:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/3136/images/header"
   },
   {
     "platform": "Kaggle",
@@ -87,7 +96,8 @@
     "url": "https://www.kaggle.com/competitions/home-data-for-ml-course",
     "deadline": "2030-01-01 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/10211/images/header"
   },
   {
     "platform": "Kaggle",
@@ -96,7 +106,8 @@
     "url": "https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques",
     "deadline": "2030-01-01 00:00:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/5407/images/header"
   },
   {
     "platform": "Kaggle",
@@ -105,7 +116,8 @@
     "url": "https://www.kaggle.com/competitions/spaceship-titanic",
     "deadline": "2030-01-01 00:00:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/34377/images/header"
   },
   {
     "platform": "Kaggle",
@@ -114,7 +126,8 @@
     "url": "https://www.kaggle.com/competitions/digit-recognizer",
     "deadline": "2030-01-01 00:00:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/3004/images/header"
   },
   {
     "platform": "Kaggle",
@@ -123,7 +136,8 @@
     "url": "https://www.kaggle.com/competitions/nlp-getting-started",
     "deadline": "2030-01-01 00:00:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/17777/images/header"
   },
   {
     "platform": "Kaggle",
@@ -132,16 +146,8 @@
     "url": "https://www.kaggle.com/competitions/store-sales-time-series-forecasting",
     "deadline": "2030-06-30 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
-  },
-  {
-    "platform": "Kaggle",
-    "name": "Connect X",
-    "description": "Connect your checkers in a row before your opponent!",
-    "url": "https://www.kaggle.com/competitions/connectx",
-    "deadline": "2030-01-01 00:00:00 UTC",
-    "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/29781/images/header"
   },
   {
     "platform": "Kaggle",
@@ -150,7 +156,18 @@
     "url": "https://www.kaggle.com/competitions/llm-classification-finetuning",
     "deadline": "2030-07-01 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/86518/images/header"
+  },
+  {
+    "platform": "Kaggle",
+    "name": "Connect X",
+    "description": "Connect your checkers in a row before your opponent!",
+    "url": "https://www.kaggle.com/competitions/connectx",
+    "deadline": "2030-01-01 00:00:00 UTC",
+    "category": "Getting Started",
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/17592/images/header"
   },
   {
     "platform": "Kaggle",
@@ -159,7 +176,8 @@
     "url": "https://www.kaggle.com/competitions/gan-getting-started",
     "deadline": "2030-07-01 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/21755/images/header"
   },
   {
     "platform": "Kaggle",
@@ -168,7 +186,8 @@
     "url": "https://www.kaggle.com/competitions/contradictory-my-dear-watson",
     "deadline": "2030-07-01 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/21733/images/header"
   },
   {
     "platform": "Kaggle",
@@ -177,55 +196,63 @@
     "url": "https://www.kaggle.com/competitions/tpu-getting-started",
     "deadline": "2030-06-03 23:59:00 UTC",
     "category": "Getting Started",
-    "reward": "$Knowledge"
+    "reward": "$Knowledge",
+    "image_url": "https://kaggle.com/competitions/21154/images/header"
   },
   {
     "platform": "Dacon",
     "name": "2025 Bias-A-Thon : Bias 발견 챌린지 <Track 1>",
     "keywords": "Track1 | 프롬프트 엔지니어링 | LLM | Bias Finding | 정성 평가",
     "url": "https://dacon.io/competitions/official/236486/overview/",
-    "period": "기간 정보를 찾을 수 없습니다."
+    "period": "기간 정보를 찾을 수 없습니다.",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236486/logo_cpt.jpeg"
   },
   {
     "platform": "Dacon",
     "name": "2025 Bias-A-Thon : Bias 대응 챌린지 <Track 2>",
     "keywords": "Track2 | 알고리즘 | 프롬프트 엔지니어링 | RAG | LLM | Bias Defence | Llama | Accuracy",
     "url": "https://dacon.io/competitions/official/236487/overview/",
-    "period": "기간 정보를 찾을 수 없습니다."
+    "period": "기간 정보를 찾을 수 없습니다.",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236487/logo_cpt.jpeg"
   },
   {
     "platform": "Dacon",
     "name": "제 4회 ETRI 휴먼이해 인공지능 논문경진대회",
     "keywords": "알고리즘 | 정형 | 라이프로그 | 논문 | 분류 | Macro F1-Score",
     "url": "https://dacon.io/competitions/official/236468/overview/",
-    "period": "기간 정보를 찾을 수 없습니다."
+    "period": "기간 정보를 찾을 수 없습니다.",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236468/logo_cpt.jpeg"
+  },
+  {
+    "platform": "Dacon",
+    "name": "갑상선암 진단 분류 해커톤 : 양성과 악성, AI로 정확히 구분하라!",
+    "keywords": "데이콘 해커톤 | 알고리즘 | 입문 | 정형 | 분류 | F1 Score",
+    "url": "https://dacon.io/competitions/official/236488/overview/",
+    "period": "2025년 05월 07일(수) 10:00 ~ 2025년 06월 30일(월) 10:00",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236488/logo_cpt.jpeg"
+  },
+  {
+    "platform": "Dacon",
+    "name": "문맥 기반 문장 순서 예측 AI 경진대회",
+    "keywords": "알고리즘 | 월간 데이콘 | NLP | 생성형 AI | LLM | Accuracy",
+    "url": "https://dacon.io/competitions/official/236489/overview/",
+    "period": "2025년 05월 07일(수) 10:00 ~ 2025년 06월 30일(월) 10:00",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236489/logo_cpt.jpeg"
   },
   {
     "platform": "Dacon",
     "name": "건설용 자갈 암석 종류 분류 AI 경진대회",
     "keywords": "알고리즘 | 월간 데이콘 | 비전 | 분류 | macro-f1",
     "url": "https://dacon.io/competitions/official/236471/overview/",
-    "period": "2025년 04월 8일(화) 10:00 ~ 2025년 05월 30일(금) 10:00"
+    "period": "2025년 04월 8일(화) 10:00 ~ 2025년 05월 30일(금) 10:00",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236471/logo_cpt.jpeg"
   },
   {
     "platform": "Dacon",
     "name": "기업 성공 확률 예측 해커톤: 미래의 성공기업을 발굴하라!",
     "keywords": "데이콘 해커톤 | 알고리즘 | 입문 | 정형 | 회귀 | Weighted MAE",
     "url": "https://dacon.io/competitions/official/236475/overview/",
-    "period": "2025년 04월 1일(화) 10:00 ~ 2025년 05월 30일(금) 10:00"
-  },
-  {
-    "platform": "Dacon",
-    "name": "이미지 분류 해커톤: 데이터 속 아이콘의 종류를 맞혀라!",
-    "keywords": "데이콘 해커톤 | 알고리즘 | 입문 | 비전 | 분류 | Accuracy",
-    "url": "https://dacon.io/competitions/official/236459/overview/",
-    "period": "2025년 03월 04일(화) 10:00 ~ 2025년 04월 30일(수) 10:00"
-  },
-  {
-    "platform": "Dacon",
-    "name": "신용카드 고객 세그먼트 분류 AI 경진대회",
-    "keywords": "알고리즘 | 월간 데이콘 | 정형 | 금융 | 분류 | F1 Score",
-    "url": "https://dacon.io/competitions/official/236460/overview/",
-    "period": "2025년 03월 10일(월) 10:00 ~ 2025년 04월 30일(수) 10:00"
+    "period": "2025년 04월 1일(화) 10:00 ~ 2025년 05월 30일(금) 10:00",
+    "image_url": "https://dacon.s3.ap-northeast-2.amazonaws.com/competition/236475/logo_cpt.jpeg"
   }
 ]

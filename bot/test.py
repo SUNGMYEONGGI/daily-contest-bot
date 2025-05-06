@@ -9,16 +9,19 @@ import os
 import json
 import shutil
 from datetime import datetime
-from bot.main import (
-    check_new_competitions,
+from main import (
+    get_kaggle_competitions,
+    get_dacon_competitions,
+    send_slack_notification,
     clean_competition_data,
+    get_new_competitions,
     logger,
     DATA_FILE as MAIN_DATA_FILE,
     DATA_DIR as MAIN_DATA_DIR
 )
 
 # 테스트 데이터 디렉토리 설정
-TEST_DATA_DIR = os.path.join("data", "test")
+TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "test")
 TEST_DATA_FILE = os.path.join(TEST_DATA_DIR, "competition_data.json")
 TEST_BACKUP_FILE = os.path.join(TEST_DATA_DIR, "competition_data.json.backup")
 
@@ -41,9 +44,10 @@ def test_competition_bot():
     대회 알림 봇의 기능을 테스트하는 함수
     
     1. competition_data.json 파일 백업
-    2. 대회 정보 크롤링 및 알림 전송
-    3. 변경사항이 있는 경우 결과 출력
-    4. 백업 파일 복구 (테스트 완료 후 원래 상태로 복원)
+    2. 각 플랫폼별 대회 정보 크롤링 테스트
+    3. 새로운 대회 감지 및 알림 전송 테스트
+    4. 변경사항이 있는 경우 결과 출력
+    5. 백업 파일 복구 (테스트 완료 후 원래 상태로 복원)
     """
     logger.info("Starting competition bot test")
     
@@ -59,26 +63,43 @@ def test_competition_bot():
         # 기존 데이터 정리
         clean_competition_data()
         
-        # 대회 정보 크롤링 및 알림 전송 테스트
-        logger.info("Testing competition check...")
-        check_new_competitions()
+        # 각 플랫폼별 대회 정보 크롤링 테스트
+        logger.info("Testing Kaggle competitions crawling...")
+        kaggle_competitions = get_kaggle_competitions()
+        logger.info(f"Found {len(kaggle_competitions)} Kaggle competitions")
         
-        # 변경사항 확인
+        logger.info("Testing Dacon competitions crawling...")
+        dacon_competitions = get_dacon_competitions()
+        logger.info(f"Found {len(dacon_competitions)} Dacon competitions")
+        
+        # 전체 대회 목록 생성
+        current_competitions = []
+        current_competitions.extend(kaggle_competitions)
+        current_competitions.extend(dacon_competitions)
+        
+        # 저장된 대회 정보 로드
         if os.path.exists(TEST_DATA_FILE):
             with open(TEST_DATA_FILE, "r", encoding="utf-8") as f:
-                new_data = json.load(f)
-                logger.info(f"Found {len(new_data)} competitions in total")
-                
-            if os.path.exists(TEST_BACKUP_FILE):
-                with open(TEST_BACKUP_FILE, "r", encoding="utf-8") as f:
-                    old_data = json.load(f)
-                new_competitions = [comp for comp in new_data if comp not in old_data]
-                if new_competitions:
-                    logger.info(f"Found {len(new_competitions)} new competitions:")
-                    for comp in new_competitions:
-                        logger.info(f"- {comp['platform']}: {comp['name']}")
-                else:
-                    logger.info("No new competitions found")
+                saved_competitions = json.load(f)
+        else:
+            saved_competitions = []
+        
+        # 새로운 대회 찾기
+        new_competitions = get_new_competitions(current_competitions, saved_competitions)
+        
+        # 새로운 대회 알림 테스트
+        if new_competitions:
+            logger.info(f"Found {len(new_competitions)} new competitions:")
+            for comp in new_competitions:
+                logger.info(f"- [{comp['platform']}] {comp['name']}")
+                # 알림 전송 테스트
+                send_slack_notification(comp)
+        else:
+            logger.info("No new competitions found")
+        
+        # 현재 대회 정보 저장
+        with open(TEST_DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(current_competitions, f, ensure_ascii=False, indent=2)
         
     except Exception as e:
         logger.error(f"Error during test: {e}")

@@ -11,6 +11,8 @@ import json
 import time
 import logging
 from datetime import datetime
+from pathlib import Path
+import re
 
 # Third-party imports
 import schedule
@@ -26,7 +28,8 @@ from kaggle.api.kaggle_api_extended import KaggleApi
 # 상수 정의
 SLACK_TOKEN = os.getenv("SLACK_TOKEN")
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#contest-notify-bot")
-DATA_DIR = os.path.join("data", "main")  # 메인 데이터 디렉토리
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data", "main")  # 메인 데이터 디렉토리
 DATA_FILE = os.path.join(DATA_DIR, "competition_data.json")
 LOG_FILE = os.path.join(DATA_DIR, "competition_bot.log")
 
@@ -49,59 +52,49 @@ load_dotenv()
 slack_client = WebClient(token=SLACK_TOKEN)
 
 
-def save_competition_data(competitions):
-    """대회 데이터를 JSON 파일로 저장하는 함수.
+def save_competition_data(data):
+    """대회 정보를 파일로 저장하는 함수.
 
     Args:
-        competitions (list): 저장할 대회 정보 리스트. 각 대회는 딕셔너리 형태로 저장됨
-
-    Returns:
-        None
-
-    Raises:
-        Exception: 파일 저장 중 오류 발생 시
+        data (list): 저장할 대회 정보 리스트
     """
     try:
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(competitions, f, ensure_ascii=False, indent=2)
+        os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
         logger.info("Competition data saved successfully")
     except Exception as e:
         logger.error(f"Error saving competition data: {e}")
 
 
 def load_competition_data():
-    """저장된 대회 데이터를 JSON 파일에서 로드하는 함수.
+    """저장된 대회 정보를 불러오는 함수.
 
     Returns:
-        list: 저장된 대회 정보 리스트. 파일이 없거나 오류 발생 시 빈 리스트 반환
-
-    Raises:
-        Exception: 파일 로드 중 오류 발생 시
+        list: 저장된 대회 정보 리스트
     """
-    try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
-        return []
-    except Exception as e:
-        logger.error(f"Error loading competition data: {e}")
-        return []
+        except Exception as e:
+            logger.error(f"Error loading competition data: {e}")
+            return []
+    return []
 
 
-def find_new_competitions(current_competitions, previous_competitions):
-    """현재 대회 목록과 이전 대회 목록을 비교하여 새로운 대회를 찾는 함수.
+def get_new_competitions(current_competitions, saved_competitions):
+    """새로운 대회를 찾는 함수.
 
     Args:
-        current_competitions (list): 현재 크롤링된 대회 정보 리스트
-        previous_competitions (list): 이전에 저장된 대회 정보 리스트
+        current_competitions (list): 현재 수집된 대회 정보 리스트
+        saved_competitions (list): 저장된 대회 정보 리스트
 
     Returns:
-        list: 새로 추가된 대회 정보 리스트
+        list: 새로 발견된 대회 정보 리스트
     """
-    current_urls = {comp['url'] for comp in current_competitions}
-    previous_urls = {comp['url'] for comp in previous_competitions}
-    new_urls = current_urls - previous_urls
-    
+    saved_urls = {comp['url'] for comp in saved_competitions}
+    new_urls = {comp['url'] for comp in current_competitions} - saved_urls
     return [comp for comp in current_competitions if comp['url'] in new_urls]
 
 
@@ -110,7 +103,7 @@ def get_kaggle_competitions():
 
     Returns:
         list: Kaggle 대회 정보 리스트. 각 대회는 딕셔너리 형태로 저장
-              (platform, name, description, url, deadline, category, reward 포함)
+              (platform, name, description, url, deadline, category, reward, image_url 포함)
 
     Raises:
         Exception: Kaggle API 호출 중 오류 발생 시
@@ -131,6 +124,45 @@ def get_kaggle_competitions():
                 else:
                     url = f"https://www.kaggle.com/competitions/{comp.ref}"
                 
+                # 웹 크롤링으로 이미지 URL 추출
+                try:
+                    response = requests.get(url)
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    
+                    # 이미지 URL 찾기 (여러 패턴 시도)
+                    image_url = None
+                    
+                    # 1. OpenGraph 이미지 태그 확인
+                    og_image = soup.find('meta', property='og:image')
+                    if og_image and og_image.get('content'):
+                        image_url = og_image.get('content')
+                    
+                    # 2. 대회 로고 이미지 찾기
+                    if not image_url:
+                        logo_img = soup.find('img', class_='competition-logo')
+                        if logo_img and logo_img.get('src'):
+                            image_url = logo_img.get('src')
+                    
+                    # 3. 대회 헤더 이미지 찾기
+                    if not image_url:
+                        header_img = soup.find('img', class_='competition-header')
+                        if header_img and header_img.get('src'):
+                            image_url = header_img.get('src')
+                    
+                    # 4. data-src 속성 확인
+                    if not image_url:
+                        img_with_data_src = soup.find('img', attrs={'data-src': True})
+                        if img_with_data_src:
+                            image_url = img_with_data_src.get('data-src')
+                    
+                    # URL이 상대 경로인 경우 절대 경로로 변환
+                    if image_url and not image_url.startswith(('http://', 'https://')):
+                        image_url = urljoin('https://www.kaggle.com', image_url)
+                        
+                except Exception as e:
+                    logger.error(f"Error scraping competition page for images: {e}")
+                    image_url = None
+                
                 competition_list.append({
                     'platform': 'Kaggle',
                     'name': comp.title,
@@ -138,9 +170,14 @@ def get_kaggle_competitions():
                     'url': url,
                     'deadline': comp.deadline.strftime("%Y-%m-%d %H:%M:%S UTC"),
                     'category': comp.category,
-                    'reward': f"${comp.reward}"
+                    'reward': f"${comp.reward}",
+                    'image_url': image_url
                 })
                 logger.info(f"Found Kaggle competition: {comp.title}")
+                if image_url:
+                    logger.info(f"Found image for competition: {comp.title}")
+                else:
+                    logger.warning(f"No image found for competition: {comp.title}")
         
         return competition_list
     except Exception as e:
@@ -168,7 +205,21 @@ def get_competition_period(detail_url):
         )
         
         if period_text:
-            return period_text.replace('- 대회 기간 : ', '').strip()
+            # 기간 텍스트에서 앞부분 제거
+            period = period_text.replace('- 대회 기간 : ', '').strip()
+            
+            # 시간 정보 제거 (정규 표현식 사용)
+            cleaned_period = re.sub(r'\d{1,2}:\d{2}', '', period)
+            
+            # "~" 기준으로 분리하여 시작일과 종료일 정리
+            parts = cleaned_period.split('~')
+            if len(parts) == 2:
+                start_date = parts[0].strip()
+                end_date = parts[1].strip()
+                # 앞뒤 공백 정리 후 다시 결합
+                return f"{start_date} ~ {end_date}"
+                
+            return cleaned_period
         return "기간 정보를 찾을 수 없습니다."
     except Exception as e:
         logger.error(f"Error getting Dacon competition period: {e}")
@@ -180,7 +231,7 @@ def get_dacon_competitions():
 
     Returns:
         list: Dacon 대회 정보 리스트. 각 대회는 딕셔너리 형태로 저장
-              (platform, name, keywords, url, period 포함)
+              (platform, name, keywords, url, period, image_url 포함)
 
     Raises:
         Exception: 웹 크롤링 중 오류 발생 시
@@ -189,104 +240,148 @@ def get_dacon_competitions():
     main_url = "https://dacon.io/competitions"
     
     try:
-        response = requests.get(main_url)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(main_url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         competitions = soup.find_all('div', class_='comp')
         active_competitions = []
         
         for comp in competitions:
-            status_div = comp.find('div', class_='dday')
-            if status_div and '참가신청중' in status_div.text:
-                name = comp.find('p', class_='name ellipsis').text.strip()
-                keywords = comp.find(
-                    'p', class_='info2 ellipsis keyword'
-                ).text.strip()
-                link_tag = comp.find('a')
-                relative_link = link_tag.get('href')
-                full_link = urljoin(base_url, relative_link)
-                schedule_url = full_link.rstrip('/') + '/schedule'
-                period = get_competition_period(schedule_url)
-                
-                competition_info = {
-                    'platform': 'Dacon',
-                    'name': name,
-                    'keywords': keywords,
-                    'url': full_link,
-                    'period': period
-                }
-                active_competitions.append(competition_info)
-                logger.info(f"Found Dacon competition: {name}")
+            try:
+                status_div = comp.find('div', class_='dday')
+                if status_div and '참가신청중' in status_div.text:
+                    # 기본 정보 추출
+                    name = comp.find('p', class_='name ellipsis').text.strip()
+                    keywords = comp.find(
+                        'p', class_='info2 ellipsis keyword'
+                    ).text.strip()
+                    link_tag = comp.find('a')
+                    relative_link = link_tag.get('href')
+                    full_link = urljoin(base_url, relative_link)
+                    schedule_url = full_link.rstrip('/') + '/schedule'
+                    period = get_competition_period(schedule_url)
+                    
+                    # 이미지 URL 추출
+                    image_url = None
+                    img_tag = comp.find('img')
+                    if img_tag:
+                        image_url = img_tag.get('src') or img_tag.get('data-src')
+                        if image_url and not image_url.startswith(('http://', 'https://')):
+                            image_url = urljoin(base_url, image_url)
+                    
+                    competition_info = {
+                        'platform': 'Dacon',
+                        'name': name,
+                        'keywords': keywords,
+                        'url': full_link,
+                        'period': period,
+                        'image_url': image_url
+                    }
+                    active_competitions.append(competition_info)
+                    logger.info(f"Found Dacon competition: {name}")
+                    if image_url:
+                        logger.info(f"Found image for competition: {name}")
+                    else:
+                        logger.warning(f"No image found for competition: {name}")
+            
+            except Exception as e:
+                logger.error(f"Error processing Dacon competition: {e}")
+                continue
+        
+        if not active_competitions:
+            logger.warning("No active competitions found on Dacon website")
         
         return active_competitions
+    
     except Exception as e:
         logger.error(f"Error getting Dacon competitions: {e}")
         return []
 
 
 def format_slack_message(competition):
-    """대회 정보를 Slack 메시지 형식으로 포맷팅하는 함수.
+    """대회 정보를 Slack 메시지 형식으로 변환하는 함수.
 
     Args:
-        competition (dict): 대회 정보 딕셔너리
+        competition (dict): 대회 정보
 
     Returns:
-        dict: Slack Block Kit 형식의 메시지 구조
+        dict: Slack 메시지 블록
     """
-    blocks = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f"🏆 새로운 {competition['platform']} 대회: {competition['name']}"
-            }
+    blocks = []
+    
+    # 헤더 섹션
+    platform_name = "Kaggle" if competition['platform'] == 'Kaggle' else "Dacon"
+    blocks.append({
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"🔥 새로운 *{platform_name}* 대회가 열렸어요!"
         }
-    ]
+    })
     
+    # 구분선
+    blocks.append({
+        "type": "divider"
+    })
+    
+    # 대회 정보 섹션
+    competition_section = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": f"*<{competition['url']}|{competition['name']}>*\n"
+        }
+    }
+
     if competition['platform'] == 'Kaggle':
-        blocks.extend([
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*설명*: {competition.get('description', '설명 없음')[:300]}..."
-                }
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*카테고리*: {competition.get('category', '없음')}"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*상금*: {competition.get('reward', '없음')}"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*마감일*: {competition.get('deadline', '없음')}"
-                    }
-                ]
-            }
-        ])
+        competition_section["text"]["text"] += (
+            f"카테고리: {competition.get('category', '없음')}\n"
+            f"상금: {competition.get('reward', '없음')}\n"
+            f"마감일: {competition.get('deadline', '없음')}"
+        )
     else:  # Dacon
-        blocks.extend([
+        competition_section["text"]["text"] += (
+            f"키워드: {competition.get('keywords', '없음')}\n"
+            f"상금: {competition.get('reward', '없음')}\n"
+            f"기간: {competition.get('period', '없음')}"
+        )
+
+    # 이미지가 있는 경우 accessory로 추가
+    if competition.get('image_url'):
+        competition_section["accessory"] = {
+            "type": "image",
+            "image_url": competition['image_url'],
+            "alt_text": "대회 이미지 썸네일"
+        }
+
+    blocks.append(competition_section)
+
+    # 컨텍스트 섹션 추가
+    blocks.append({
+        "type": "context",
+        "elements": [
             {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*키워드*: {competition.get('keywords', '없음')}"
-                }
+                "type": "image",
+                "image_url": "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
+                "alt_text": "Location Pin Icon"
             },
             {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*기간*: {competition.get('period', '없음')}"
-                }
+                "type": "plain_text",
+                "emoji": True,
+                "text": competition.get('description', '')[:100] if competition['platform'] == 'Kaggle' else competition.get('keywords', '')
             }
-        ])
+        ]
+    })
     
+    # 구분선
+    blocks.append({
+        "type": "divider"
+    })
+    
+    # 액션 버튼 추가
     blocks.append({
         "type": "actions",
         "elements": [
@@ -294,199 +389,134 @@ def format_slack_message(competition):
                 "type": "button",
                 "text": {
                     "type": "plain_text",
+                    "emoji": True,
+                    "text": "같이 할 사람 찾기 👋🏼"
+                },
+                "url": "https://forms.gle/pjKkvprwGQpGgPTE9",
+                "value": "go_to_surveyform"
+            },
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "emoji": True,
                     "text": "대회 페이지 방문"
                 },
-                "url": competition.get('url', '')
+                "url": competition['url'],
+                "value": "go_to_competition"
             }
         ]
     })
     
-    return {"blocks": blocks}
+    return blocks
 
 
 def send_slack_notification(competition):
-    """대회 정보를 Slack 채널로 전송하는 함수.
+    """Slack으로 대회 알림을 보내는 함수.
 
     Args:
-        competition (dict): 전송할 대회 정보 딕셔너리
-
-    Returns:
-        bool: 메시지 전송 성공 여부
-
-    Raises:
-        SlackApiError: Slack API 호출 중 오류 발생 시
+        competition (dict): 대회 정보
     """
     try:
-        message = format_slack_message(competition)
+        blocks = format_slack_message(competition)
+        
+        # 디버깅: 블록 구조 출력
+        logger.info(f"Sending notification with {len(blocks)} blocks")
+        
         response = slack_client.chat_postMessage(
             channel=SLACK_CHANNEL,
-            blocks=message["blocks"],
-            text=f"새로운 {competition['platform']} 대회: {competition['name']}"
+            blocks=blocks,
+            text=f"New competition: {competition['name']}",  # 폴백 텍스트
+            unfurl_links=False,  # 링크 미리보기 비활성화
+            unfurl_media=False   # 미디어 미리보기 비활성화
         )
-        logger.info(
-            f"Slack message sent for {competition['platform']} "
-            f"competition: {competition['name']}"
-        )
-        return True
+        if response["ok"]:
+            logger.info(f"Slack notification sent for: {competition['name']}")
+        else:
+            logger.error(f"Failed to send Slack notification: {response['error']}")
     except SlackApiError as e:
-        logger.error(f"Error sending Slack message: {e.response['error']}")
-        return False
-
-
-def send_no_competition_notification():
-    """새로운 대회가 없을 때 Slack 채널로 알림을 전송하는 함수.
-
-    Returns:
-        bool: 메시지 전송 성공 여부
-
-    Raises:
-        SlackApiError: Slack API 호출 중 오류 발생 시
-    """
-    try:
-        message = {
-            "blocks": [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": (
-                            "🔍 *대회 알림 업데이트*\n"
-                            "현재 새로운 대회가 없습니다. "
-                            "다음 업데이트를 기다려주세요!"
-                        )
-                    }
-                }
-            ]
-        }
-        response = slack_client.chat_postMessage(
-            channel=SLACK_CHANNEL,
-            blocks=message["blocks"],
-            text="새로운 대회가 없습니다."
-        )
-        logger.info("No competition notification sent")
-        return True
-    except SlackApiError as e:
-        logger.error(f"Error sending Slack message: {e.response['error']}")
-        return False
+        logger.error(f"Error sending Slack notification: {e.response['error']}")
+        # 추가 디버깅 정보
+        if 'blocks' in e.response:
+            logger.error(f"Invalid blocks detail: {e.response['blocks']}")
+    except Exception as e:
+        logger.error(f"Unexpected error sending notification: {str(e)}")
 
 
 def check_new_competitions():
-    """새로운 대회를 확인하고 알림을 보내는 메인 함수.
-    
-    1. 이전 데이터를 로드
-    2. 현재 Kaggle과 Dacon의 대회 정보를 가져옴
-    3. 새로운 대회가 있는지 확인
-    4. 결과를 저장하고 알림을 전송
-
-    Returns:
-        None
-    """
-    logger.info("Checking for new competitions...")
-    
-    # 1. 이전 데이터 로드
-    previous_competitions = load_competition_data()
-    
-    # 2. 현재 대회 정보 가져오기
-    current_kaggle = get_kaggle_competitions()
-    current_dacon = get_dacon_competitions()
-    current_competitions = current_kaggle + current_dacon
-    
-    # 3. 새로운 대회 찾기
-    new_competitions = find_new_competitions(current_competitions, previous_competitions)
-    
-    # 4. 현재 데이터 저장 (기존 데이터 업데이트)
-    save_competition_data(current_competitions)
-    
-    # 새로운 대회 여부와 관계없이 항상 알림 보내기
-    if new_competitions:
-        logger.info(f"Found {len(new_competitions)} new competitions")
+    """새로운 대회를 확인하고 알림을 보내는 함수."""
+    try:
+        # 저장된 대회 정보 로드
+        saved_competitions = load_competition_data()
+        
+        # 현재 진행 중인 대회 정보 수집
+        current_competitions = []
+        current_competitions.extend(get_kaggle_competitions())
+        current_competitions.extend(get_dacon_competitions())
+        
+        if not current_competitions:
+            logger.warning("No competitions found")
+            return
+        
+        # 새로운 대회 찾기
+        new_competitions = get_new_competitions(current_competitions, saved_competitions)
+        
+        # 새로운 대회가 있으면 알림 전송
         for comp in new_competitions:
             send_slack_notification(comp)
-    else:
-        logger.info("No new competitions found")
-        send_no_competition_notification()
+        
+        # 대회 정보 저장
+        save_competition_data(current_competitions)
+        
+        if new_competitions:
+            logger.info(f"Found {len(new_competitions)} new competitions")
+        else:
+            logger.info("No new competitions found")
+            
+    except Exception as e:
+        logger.error(f"Error checking new competitions: {e}")
 
 
 def clean_competition_data():
-    """기존 대회 데이터의 URL 중복 문제를 해결하는 함수.
-    
-    Returns:
-        None
-    """
+    """만료된 대회를 제거하는 함수."""
     try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                competitions = json.load(f)
-            
-            # URL 중복 수정
-            for comp in competitions:
-                if 'url' in comp and 'https://www.kaggle.com/competitions/https://www.kaggle.com/competitions/' in comp['url']:
-                    comp['url'] = comp['url'].replace('https://www.kaggle.com/competitions/https://www.kaggle.com/competitions/', 'https://www.kaggle.com/competitions/')
-            
-            # 수정된 데이터 저장
-            with open(DATA_FILE, 'w', encoding='utf-8') as f:
-                json.dump(competitions, f, ensure_ascii=False, indent=2)
-            
-            logger.info("Competition data cleaned successfully")
+        competitions = load_competition_data()
+        if not competitions:
+            return
+        
+        current_time = datetime.now()
+        cleaned_competitions = []
+        
+        for comp in competitions:
+            # Kaggle 대회의 경우 deadline 확인
+            if comp['platform'] == 'Kaggle':
+                deadline = datetime.strptime(
+                    comp['deadline'],
+                    "%Y-%m-%d %H:%M:%S UTC"
+                )
+                if deadline > current_time:
+                    cleaned_competitions.append(comp)
+            else:  # Dacon 대회의 경우 모두 포함 (크롤링 시 이미 진행 중인 대회만 수집)
+                cleaned_competitions.append(comp)
+        
+        save_competition_data(cleaned_competitions)
+        logger.info("Competition data cleaned")
+        
     except Exception as e:
         logger.error(f"Error cleaning competition data: {e}")
 
 
 def main():
-    """프로그램의 메인 실행 함수.
-    
-    GitHub Actions 환경에서는 한 번만 실행하고,
-    로컬 환경에서는 매일 오전 10:30 KST(=01:30 UTC)에 실행 (주말 제외)
-    """
+    """메인 함수."""
     logger.info("Competition notification bot started")
     
-    # 기존 데이터 정리
-    clean_competition_data()
+    # 1분마다 새로운 대회 확인
+    schedule.every(1).minutes.do(check_new_competitions)
     
-    # GitHub Actions 환경인지 확인
-    if os.getenv('GITHUB_ACTIONS'):
-        # GitHub Actions에서는 한 번만 실행
-        check_new_competitions()
-    else:
-        # 로컬 환경에서는 매일 오전 10:30 KST(=01:30 UTC)에 실행 (주말 제외)
-        schedule.every().day.at("01:30").do(check_new_competitions)  # 10:30 KST
-        logger.info("Scheduler set to run at 10:30 KST (01:30 UTC) on weekdays")
-        # 스케줄러 실행
-        while True:
-            # 주말이 아닐 때만 스케줄러 실행
-            if datetime.now().weekday() < 5:  # 0-4는 월요일부터 금요일
-                schedule.run_pending()
-            time.sleep(60)  # 1분마다 체크
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
     main()
-
-'''
-def main():
-    """프로그램의 메인 실행 함수.
-    
-    1. 스케줄러를 설정하여 매일 오전 10시 30분에 실행 (주말 제외)
-    2. 프로그램 시작 시 한 번 실행
-    3. 무한 루프로 스케줄러 실행
-    """
-    logger.info("Competition notification bot started")
-    
-    # 기존 데이터 정리
-    clean_competition_data()
-    
-    # 스케줄러 설정 (매일 오후 12시 30분에 실행, 주말 제외
-    schedule.every().day.at("12:30").do(check_new_competitions)
-    
-    logger.info("Scheduler set to run at 12:30 AM on weekdays")
-    
-    # 스케줄러 실행
-    while True:
-        # 주말이 아닐 때만 스케줄러 실행
-        if datetime.now().weekday() < 5:  # 0-4는 월요일부터 금요일
-            schedule.run_pending()
-        time.sleep(60)  # 1분마다 체크
-
-
-        send_slack_notification()
-'''

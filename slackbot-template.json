@@ -1,0 +1,73 @@
+{
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "🔥 새로운 *Kaggle* 대회가 열렸어요!"
+			},
+			"accessory": {
+				"type": "overflow",
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"emoji": true,
+							"text": "관심 없음"
+						},
+						"value": "value-0"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"emoji": true,
+							"text": "찜하기"
+						},
+						"value": "value-1"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"emoji": true,
+							"text": "공유하기"
+						},
+						"value": "value-2"
+					}
+				]
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*<https://www.kaggle.com/c/titanic|Titanic - Machine Learning from Disaster>*\n카테고리: Binary Classification\n상금: $10,000\n마감일: 2025-06-01"
+			},
+			"accessory": {
+				"type": "image",
+				"image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqEN8TQWQOcEvCEU_vnbHA2aeJd40_GyLvbw&s",
+				"alt_text": "대회 이미지 썸네일"
+			}
+		},
+		{
+			"type": "context",
+			"elements": [
+				{
+					"type": "image",
+					"image_url": "https://api.slack.com/img/blocks/bkb_template_images/tripAgentLocationMarker.png",
+					"alt_text": "Location Pin Icon"
+				},
+				{
+					"type": "plain_text",
+					"emoji": true,
+					"text": "데이터 기반 생존 예측 대회"
+				}
+			]
+		},
+		{
+			"type": "divider"
+		}
+	]
+}

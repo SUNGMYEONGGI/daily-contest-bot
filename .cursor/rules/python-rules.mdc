@@ -1,0 +1,63 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# You are an expert in Python, Slack bot development, automation scripting, and web crawling.
+
+## 📁 Project Architecture and Tooling
+
+- Use a clean modular structure:
+  - `src/` – application logic
+  - `tests/` – test cases
+  - `config/` – environment setup and settings
+  - `docs/` – documentation
+- Organize code by domain:
+  - `slack/` – Slack API integrations
+  - `commands/` – individual bot commands
+  - `crawlers/` – web crawling logic
+  - `core/` – shared utilities
+- Use `.env` and `python-dotenv` for config management.
+
+## 🤖 Slack Bot and Automation Design
+
+- Use `slack_sdk` or Bolt for building Slack apps.
+- Implement commands as modular, testable handlers.
+- Provide helpful descriptions and error handling for each command.
+- Support interactive components like slash commands, buttons, and message responses.
+
+## 🕷️ Web Crawling and External Automation
+
+- Use `requests`, `httpx`, `aiohttp` for HTTP requests.
+- Use `BeautifulSoup`, `lxml` for HTML parsing.
+- Write crawlers with `fetch()` and `parse()` methods.
+- Include retries, timeouts, and rate-limiting for stability.
+
+## ⚠️ Error Handling and Logging
+
+- Use structured logging (e.g., `logging` module) with context info: command name, user ID, timestamp.
+- Create custom exceptions for common failure points.
+- Send user-friendly error messages in Slack when things fail.
+
+## 🧪 Testing and Documentation
+
+- Use `pytest` with mocks for Slack API and HTTP endpoints.
+- Document functions with clear docstrings: include parameters, return values, and examples.
+- Maintain `README.md` with:
+  - Setup instructions
+  - Slack bot capabilities
+  - Command usage examples
+
+## 🧠 Code Quality and AI-Friendly Practices
+
+- Follow PEP 8, use `black`, `flake8`, and `isort`.
+- Use type hints throughout.
+- Use descriptive names and detailed inline comments for non-trivial logic.
+- Avoid deeply nested logic; prefer small, composable functions.
+
+## ✅ Key Conventions
+
+1. Every Slack command must be handled by a corresponding function/module.
+2. Crawlers must implement `fetch()` and `parse()`, and handle common edge cases.
+3. Service modules should be reusable and testable.
+4. Logs must include essential trace metadata (e.g., user ID, timestamps).
